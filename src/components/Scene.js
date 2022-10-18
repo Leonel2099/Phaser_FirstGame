@@ -4,6 +4,8 @@ export default class Escena extends Phaser.Scene {
     play = null
     stars = null
     cursors = null
+    score = null;
+    scoreText;
     preload() {
         this.load.image('sky', "assets/img/sky.png");
         this.load.image('ground', 'assets/img/platform.png');
@@ -64,6 +66,9 @@ export default class Escena extends Phaser.Scene {
             repeat: 15,
             setXY: { x: 12, y: 0, stepX: 60 }
         });
+        this.scoreText = this.add.text(16, 16, 'score: 0', {
+            fontSize: '32px', fill: '#000'
+        });
         this.physics.add.collider(this.stars, this.plataform);
 
         this.stars.children.iterate(function (child) {
@@ -71,6 +76,7 @@ export default class Escena extends Phaser.Scene {
         })
         //colision player y stars
         this.physics.add.overlap(this.player, this.stars, this.collectStar, null, this)
+        
     }
 
     update() {
@@ -95,8 +101,9 @@ export default class Escena extends Phaser.Scene {
 
     }
     //Colision con playes con stars para que se desasaparezcan 
-    collectStar(player, star){
+    collectStar(player, star) {
         star.disableBody(true, true);
-
+        this.score += 10;
+        this.scoreText.setText('Score: ' + this.score);
     }
 };
