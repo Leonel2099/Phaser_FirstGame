@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 export default class Escena extends Phaser.Scene {
-    plataform = null;
-    play = null
+    plataforms = null;
+    bomb = null;
+    player = null
     stars = null
     cursors = null
     score = null;
@@ -20,14 +21,14 @@ export default class Escena extends Phaser.Scene {
         //Agregando el fondo
         this.add.image(400, 300, 'sky');
 
-        //Creando las plataformas
-        this.plataform = this.physics.add.staticGroup();
+        //Creando las plataformsas
+        this.plataforms = this.physics.add.staticGroup();
 
-        this.plataform.create(400, 568, 'ground').setScale(2).refreshBody();
+        this.plataforms.create(400, 568, 'ground').setScale(2).refreshBody();
 
-        this.plataform.create(600, 400, 'ground')
-        this.plataform.create(50, 250, 'ground')
-        this.plataform.create(750, 220, 'ground')
+        this.plataforms.create(600, 400, 'ground')
+        this.plataforms.create(50, 250, 'ground')
+        this.plataforms.create(750, 220, 'ground')
 
         //Agregado de personaje y star
         this.player = this.physics.add.sprite(100, 300, 'dude')
@@ -36,8 +37,8 @@ export default class Escena extends Phaser.Scene {
         this.player.setBounce(0.2)
         this.player.setCollideWorldBounds(true)
 
-        //Colcison con las plataformas
-        this.physics.add.collider(this.player, this.plataform);
+        //Colcison con las plataformsas
+        this.physics.add.collider(this.player, this.plataforms);
 
         this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -63,20 +64,29 @@ export default class Escena extends Phaser.Scene {
         //Agregado de Estrellas
         this.stars = this.physics.add.group({
             key: 'star',
-            repeat: 15,
+            repeat: 11,
             setXY: { x: 12, y: 0, stepX: 60 }
         });
         this.scoreText = this.add.text(16, 16, 'score: 0', {
             fontSize: '32px', fill: '#000'
         });
-        this.physics.add.collider(this.stars, this.plataform);
+        this.physics.add.collider(this.stars, this.plataforms);
 
         this.stars.children.iterate(function (child) {
             child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8))
         })
         //colision player y stars
         this.physics.add.overlap(this.player, this.stars, this.collectStar, null, this)
-        
+
+        //se agrega las bombas
+        this.bomb = this.physics.add.group();
+
+        //colision de las bombas con las plataformsas   
+        this.physics.add.collider(this.bomb, this.platforms);
+
+        //colision del pj con las bombas
+        this.physics.add.collider(this.player, this.bomb, this.hitBomb, null, this);
+
     }
 
     update() {
@@ -105,5 +115,22 @@ export default class Escena extends Phaser.Scene {
         star.disableBody(true, true);
         this.score += 10;
         this.scoreText.setText('Score: ' + this.score);
+        if (this.stars.countActive(true) === 0) {
+            this.stars.children.iterate(function (child) {
+                child.enableBody(true, child.x, 0, true, true);
+            });
+            var x = (this.player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+            var bomb = this.bomb.create(x, 16, 'bomb');
+            bomb.setBounce(1);
+            bomb.setCollideWorldBounds(true);
+            bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        }
+    }
+    //funcion cuando el pj choque con una bomba se termine el juego
+    hitBomb(player, bomb) {
+        this.physics.pause();
+        player.setTint(0xff0000);
+        player.anims.play('turn');
+        alert('GAME OVER')
     }
 };
